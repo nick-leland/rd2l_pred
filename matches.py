@@ -10,3 +10,4 @@ headers = {"User-Agent": "insomnia/8.6.1"}
 response = requests.request("GET", url, data=payload, headers=headers, params=querystring)
 
 print(response.text)
+print(type(response.text))

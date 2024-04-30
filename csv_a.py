@@ -16,47 +16,63 @@ for _ in files:
 if len(captains) != len(draft):
     print("DATA PROBLEM, there is an uneven amount of data in the '/data' folder.  There should be the same amount of Draft .csv files as there are Captains .csv files.")
 
+draft = sorted(draft)
+captains = sorted(captains)
+
 
 # Need to map a function onto the series to change dotabuff -> userid
 
-# Loop for captains
-# file_name = "S26 Draft Sheet - Captains.csv"
-print(captains)
-print(len(captains))
+# Loop to gather the monetary information for the league season 
+def modification(input_string):
+    x = input_string.split("/")[-1]
+    return x 
+
+money = {}
 for season in captains:
+    #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
     d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+
     if d.shape[1] == 5:
         d.columns = ['Name', 'Dotabuff', 'MMR', 'Total_Money', 'Left']
-        def modification(input_string):
-            x = input_string.split("/")[-1]
-            return x 
         d['Dotabuff'] = d['Dotabuff'].map(modification) 
-        captains = [] 
-        # captains.update({season.split()[0] : d})
-        captains.append(d)
-
-    # Need to figure out the above function and how to generate names for variables (Keep researching dictionary, I tried adding to a list and that didn't seem to work.  
-        
+        s = pd.Series(data={'sum': d.Total_Money.sum()}, index=['sum'])
+        money.update({season.split()[0] : pd.concat([d.Total_Money.describe(), s])})
     
     if d.shape[1] == 6:
-        print("6 columns", season)
-        continue
+        d.columns = ['Name', 'Dotabuff', 'MMR', 'Fake Money', 'Total_Money', 'Left']
+        d = d.drop('Fake Money', axis=1)
+        d['Dotabuff'] = d['Dotabuff'].map(modification) 
+        s = pd.Series(data={'sum': d.Total_Money.sum()}, index=['sum'])
+        money.update({season.split()[0] : pd.concat([d.Total_Money.describe(), s])})
 
-
-
-
-    # This is totally wrong not sure what is happening
-    if d.shape[1] != 6 or d.shape[1] != 5:
+    if d.shape[1] != 6 and d.shape[1] != 5:
         print("Weird Error Here", season, d.shape)
         continue
+# print(money)
+players_dict = {}
+for season in draft:
+    #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
+    d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+    d = d.drop(columns=['Winner:', 'Discord ID:', 'Player statement: '])
+    d['Dotabuff Link:'] = d['Dotabuff Link:'].map(modification)
+    d = d.rename(columns={"Cost:": "cost", "Dotabuff Link:": "player_id", "MMR:": "mmr", "Comfort (Pos 1):": "p1", "Comfort (Pos 2):": "p2", "Comfort (Pos 3):": "p3", "Comfort (Pos 4):": "p4", "Comfort (Pos 5):": "p5"})
+    # Turning the comfort levels into binary classification might be something worth exploring
+    player_season = season.split(" ")[0]
+    # print(money[player_season])
+    # print(money[player_season].shape)
+    # print((money[player_season].loc['count']))
+    d = d.assign(count=lambda x: money[player_season].loc['count'], mean=lambda x: money[player_season].loc['mean'], std=lambda x: money[player_season].loc['std'], min=lambda x: money[player_season].loc['min'], max=lambda x: money[player_season].loc['max'], sum=lambda x: money[player_season].loc['sum'])
+    for players in range(len(d.player_id.to_list())):
+        p_id = d.iloc[players, 1]
+        players_dict.update({f"{p_id}_{player_season}": d.iloc[players]})
+        # print(f"{p_id}_{player_season}")
+    print(len(players_dict))
+final_df = pd.DataFrame(data=players_dict)
+print(final_df)
+final_df.to_csv('output/spreadsheet_info.csv')
+# final_df.to_csv('output/spreadsheet_info.csv', index=False)
    
-    
-    print(captains)
-    # captains = {}
-    # captains.update({season.split()[0] : d})
-
-# DataFrame analysis starts here: 
-# print(d.loc[:, "Buck's Bucks"].mean())
-# print(d.loc[:, "Buck's Bucks"].describe())
+# print(d)
+# print(d.iloc[0])
 
 
