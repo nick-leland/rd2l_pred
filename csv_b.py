@@ -6,7 +6,6 @@ path = os.path.relpath("data")
 files = os.listdir(path)
 
 draft, captains = [], []
-
 # Loop function to create a list of file names for drafts and captains respectively 
 for _ in files:
     if _.split()[4] == 'Draft':
@@ -31,7 +30,7 @@ def modification(input_string):
 money = {}
 for season in captains:
     #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
-    d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+    d = pd.read_csv(f"/home/spiffy/programming/rd2l_pred/data/{season}")
 
     if d.shape[1] == 5:
         d.columns = ['Name', 'Dotabuff', 'MMR', 'Total_Money', 'Left']
@@ -53,8 +52,10 @@ for season in captains:
 players_dict = {}
 for season in draft:
     #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
-    d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+    d = pd.read_csv(f"/home/spiffy/programming/rd2l_pred/data/{season}")
     d = d.drop(columns=['Winner:', 'Discord ID:', 'Player statement: '])
+    # This is a temporary fix to accomodate the random 'statement' in the sheets file.
+    d = d.iloc[:56]
     d['Dotabuff Link:'] = d['Dotabuff Link:'].map(modification)
     d = d.rename(columns={"Cost:": "cost", "Dotabuff Link:": "player_id", "MMR:": "mmr", "Comfort (Pos 1):": "p1", "Comfort (Pos 2):": "p2", "Comfort (Pos 3):": "p3", "Comfort (Pos 4):": "p4", "Comfort (Pos 5):": "p5"})
     # Turning the comfort levels into binary classification might be something worth exploring
