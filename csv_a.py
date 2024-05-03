@@ -4,7 +4,6 @@ from os import path
 
 path = os.path.relpath("data")
 files = os.listdir(path)
-
 draft, captains = [], []
 
 # Loop function to create a list of file names for drafts and captains respectively 
