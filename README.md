@@ -73,8 +73,8 @@ Will be converted to something along the lines of:
 ## Program Structure
 ```mermaid
 graph TD
-    A[RD2L Spreadsheets from previous seasons (S25 to Current)] -->|Files: S25 Draft Sheet - Captains.csv, etc.| B[/data/]
-    A1[RD2L Spreadsheets from current season (SXX)] -->|Files: SXX Draft Sheet - Captains.csv, etc.| B1[/data/]
+    A["RD2L Spreadsheets from previous seasons S25 to Current"] -->|Files: S25 Draft Sheet - Captains.csv, etc.| B[/data/]
+    A1["RD2L Spreadsheets from current season SXX"] -->|Files: SXX Draft Sheet - Captains.csv, etc.| B1[/data/]
 
     B --> C[training_data_prep.py]
     B1 --> C1[prediction_data_prep.py]
@@ -99,6 +99,7 @@ graph TD
     class B,B1,C,C1,D,D1 data
     classDef process fill:#cfc,stroke:#333,stroke-width:2px;
     class E,F,F1,G,H process
+
 ```
 
 ## Results
