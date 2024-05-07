@@ -73,25 +73,25 @@ Will be converted to something along the lines of:
 ## Program Structure
 ```mermaid
 graph TD
-    A["RD2L Spreadsheets from previous seasons S25 to Current"] -->|Files: S25 Draft Sheet - Captains.csv, etc.| B[/data/]
-    A1["RD2L Spreadsheets from current season SXX"] -->|Files: SXX Draft Sheet - Captains.csv, etc.| B1[/data/]
+    A["RD2L Spreadsheets from previous seasons S25 to Current"] -->|Files: S25 Draft Sheet - Captains.csv, etc.| B["/data/"]
+    A1["RD2L Spreadsheets from current season SXX"] -->|Files: SXX Draft Sheet - Captains.csv, etc.| B1["/data/"]
 
-    B --> C[training_data_prep.py]
-    B1 --> C1[prediction_data_prep.py]
+    B --> C["training_data_prep.py"]
+    B1 --> C1["prediction_data_prep.py"]
 
-    C --> D[/data/staging/training_data_prepped.csv]
-    C1 --> D1[/data/staging/prediction_data_prepped.csv]
+    C --> D["/data/staging/training_data_prepped.csv"]
+    C1 --> D1["/data/staging/prediction_data_prepped.csv"]
 
-    D --> E[feature_engineering.py]
+    D --> E["feature_engineering.py"]
     D1 --> E
 
-    E --> F[/output/training_data.csv]
-    E --> F1[/output/prediction_data.csv]
+    E --> F["/output/training_data.csv"]
+    E --> F1["/output/prediction_data.csv"]
 
-    F --> G[Machine Learning Model]
+    F --> G["Machine Learning Model"]
     F1 --> G
 
-    G --> H[Predicted Data]
+    G --> H["Predicted Data"]
 
     classDef files fill:#f9f,stroke:#333,stroke-width:2px;
     class A,A1 files
@@ -99,7 +99,6 @@ graph TD
     class B,B1,C,C1,D,D1 data
     classDef process fill:#cfc,stroke:#333,stroke-width:2px;
     class E,F,F1,G,H process
-
 ```
 
 ## Results
