@@ -10,14 +10,14 @@ Within the RD2L league specifically, entrants are grouped into two categories, p
 Currently there are 4 ways to gather information that we would be able to use when training a model.  
 ### Spreadsheet: 
 The information provided by the google sheets spreadsheet that the organization runs is unfortunately bare minimum at best.  Ultimately we will utilize previous season spreadsheets as the baseline information giving us the following: MMR, Player_id, Role comfort and cost.  Player_id is originally given as a dotabuff url but with some quick python string parsing we can extract the information.  "https://www.dotabuff.com/players/{player_id}" can be modified with a simple function mapped onto a Pandas DataFrame:
-
+```
 def modification(input_string):
 	return input_string.split("/")[-1]
-
+```
 Then applying the following:
-
+```
 DataFrame['Dotabuff'] = DataFrame['Dotabuff'].map(modification)
-
+```
 ### Dotabuff:
 This is a great tool for general users but for applications it is quite poor.  We will be exploring it much later as an extension tool, but because it lacks an API we will need to utilize web scraping techniques. 
 
