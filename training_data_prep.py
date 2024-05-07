@@ -62,6 +62,8 @@ def league_money(captains):
 
 
 def df_gen(draft, money):
+    """Generates the dataframe containing all players"""
+
     players_dict = {}
     for season in draft:
         #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
