@@ -93,11 +93,11 @@ graph TD
 
     G --> H["Predicted Data"]
 
-    classDef files fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef files fill:#d3d3d3,stroke:#333,stroke-width:2px, color:black;
     class A,A1 files
-    classDef data fill:#ccf,stroke:#333,stroke-width:2px;
+    classDef data fill:#a9a9a9,stroke:#333,stroke-width:2px, color:black;
     class B,B1,C,C1,D,D1 data
-    classDef process fill:#cfc,stroke:#333,stroke-width:2px;
+    classDef process fill:#808080,stroke:#333,stroke-width:2px, color:black;
     class E,F,F1,G,H process
 ```
 
