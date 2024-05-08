@@ -77,11 +77,12 @@ def df_gen(draft, money):
         for players in range(len(d.player_id.to_list())):
             p_id = d.iloc[players, 1]
             players_dict.update({f"{p_id}_{player_season}": d.iloc[players]})
-        print(len(players_dict))
+        # print(len(players_dict))
     
     final_df = pd.DataFrame(data=players_dict)
-    print(final_df)
-    final_df.to_csv('output/spreadsheet_info.csv')
+    # print(final_df)
+    # TODO Should create a directory called /data/staging/ where the prepped data is stored.
+    final_df.to_csv('output/training_data_prepped.csv')
 
     # final_df.to_csv('output/spreadsheet_info.csv', index=False)
        
@@ -91,9 +92,10 @@ def df_gen(draft, money):
 
 if __name__ == "__main__":
     draft, captains = list_format()
-    print(draft)
-    print()
-    print(captains)
+    # print(draft)
+    # print()
+    # print(captains)
     league_money(captains) 
-    print(league_money(captains))
-    # df_gen(draft, league_money(captains))
+    # print(league_money(captains))
+    df_gen(draft, league_money(captains))
+    print("Training Data was successfully prepared")
