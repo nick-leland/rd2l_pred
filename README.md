@@ -61,11 +61,11 @@ Train a Machine Learning model to distinguish the players position based on seve
 ```
 Will be converted to something along the lines of:
 ```
-+---------------------+---------------------+--------+---------------------+---------------------+
-|   {hero_id}_games   | {hero_id}_winrate   |  ...   | total_games_played  |   total_winrate     |
-+---------------------+---------------------+--------+---------------------+---------------------+
-|          0          |         0%          |        |          0          |          0%         |
-+---------------------+---------------------+--------+---------------------+---------------------+
++--------------------+--------------------+--------+---------------------+-------------------+
+|   {hero_id}_games  | {hero_id}_winrate  |  ...   | total_games_played  |  total_winrate    |
++--------------------+--------------------+--------+---------------------+-------------------+
+|          0         |         0%         |        |          0          |         0%        |
++--------------------+--------------------+--------+---------------------+-------------------+
 ```
 
 * We can additionally calculate the last two columns here with some simple analysis of the hero data.  total_games_played is simply the sum of all games for each individual hero.  total_winrate is simply the sum of all wins divided by the sum of all games.  
