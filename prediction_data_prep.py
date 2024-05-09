@@ -10,7 +10,9 @@ files = os.listdir(path)
 draft, captains = [], []
 # Loop function to create a list of file names for drafts and captains respectively 
 for _ in files:
-    if _.split()[4] == 'Draft':
+    if _ == 'INSTRUCTIONS.md':
+        pass
+    elif _.split()[4] == 'Draft':
         draft.append(_)
     else:
         captains.append(_)
