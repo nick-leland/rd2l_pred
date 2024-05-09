@@ -1,8 +1,10 @@
 import pandas as pd
 import os
 from os import path
+from training_data_prep import list_format, modification
 
-path = os.path.relpath("data")
+
+path = os.path.relpath("input")
 files = os.listdir(path)
 
 draft, captains = [], []
@@ -71,10 +73,12 @@ for season in draft:
     print(len(players_dict))
 final_df = pd.DataFrame(data=players_dict)
 print(final_df)
-final_df.to_csv('output/spreadsheet_info.csv')
+final_df.to_csv('output/prediction_data_prepped.csv')
 # final_df.to_csv('output/spreadsheet_info.csv', index=False)
    
 # print(d)
 # print(d.iloc[0])
 
+if __name__ == "__main__":
+    draft, captains = list_format()
 

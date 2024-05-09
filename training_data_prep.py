@@ -3,9 +3,9 @@ import os
 from os import path
 
 
-def list_format():
+def list_format(location):
     """Parses the information within the data folder and returns a list with the respective file names"""
-    path = os.path.relpath("data")
+    path = os.path.relpath(f"{location}")
     files = os.listdir(path)
     draft, captains = [], []
     
@@ -80,8 +80,11 @@ def df_gen(draft, money):
         # print(len(players_dict))
     
     final_df = pd.DataFrame(data=players_dict)
-    # print(final_df)
+    # Prints the Transposed version of the DataFrame
+    print(final_df.transpose())
+
     # TODO Should create a directory called /data/staging/ where the prepped data is stored.
+
     final_df.to_csv('output/training_data_prepped.csv')
 
     # final_df.to_csv('output/spreadsheet_info.csv', index=False)
@@ -91,7 +94,7 @@ def df_gen(draft, money):
 
 
 if __name__ == "__main__":
-    draft, captains = list_format()
+    draft, captains = list_format("data")
     # print(draft)
     # print()
     # print(captains)
