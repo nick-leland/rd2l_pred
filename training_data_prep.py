@@ -11,7 +11,9 @@ def list_format(location):
     
     # Loop function to create a list of file names for drafts and captains respectively 
     for _ in files:
-        if _.split()[4] == 'Draft':
+        if _ == 'INSTRUCTIONS.md':
+            pass
+        elif _.split()[4] == 'Draft':
             draft.append(_)
         else:
             captains.append(_)
@@ -34,13 +36,19 @@ def modification(input_string):
     x = input_string.split("/")[-1]
     return x 
 
-def league_money(captains):
+def league_money(captains, data_type):
     """Loop to gather the monetary information for the league season"""
     
     money = {}
     for season in captains:
         #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
-        d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+
+        if data_type == 'prediction':
+            path = os.path.relpath(f"input/{season}")
+        elif data_type == 'training':
+            path = os.path.relpath(f"data/{season}")
+
+        d = pd.read_csv(path)
     
         if d.shape[1] == 5:
             d.columns = ['Name', 'Dotabuff', 'MMR', 'Total_Money', 'Left']
@@ -61,23 +69,39 @@ def league_money(captains):
     return money
 
 
-def df_gen(draft, money):
+def df_gen(draft, money, data_type):
     """Generates the dataframe containing all players"""
 
     players_dict = {}
     for season in draft:
-        #TODO This should be changed to a relative directory instead of using user specifid (Already have os)
-        d = pd.read_csv(f"/home/nick/programming/rd2l_pred/data/{season}")
+
+        # Reads the .csv file for the selected season
+        if data_type == 'prediction':
+            path = os.path.relpath(f"input/{season}")
+        elif data_type == 'training':
+            path = os.path.relpath(f"data/{season}")
+        d = pd.read_csv(path)
+
+
+        # Removes columns that are not needed
         d = d.drop(columns=['Winner:', 'Discord ID:', 'Player statement: '])
+
+        # Maps the dotabuff -> steam_id conversion
         d['Dotabuff Link:'] = d['Dotabuff Link:'].map(modification)
+
         d = d.rename(columns={"Cost:": "cost", "Dotabuff Link:": "player_id", "MMR:": "mmr", "Comfort (Pos 1):": "p1", "Comfort (Pos 2):": "p2", "Comfort (Pos 3):": "p3", "Comfort (Pos 4):": "p4", "Comfort (Pos 5):": "p5"})
+
         #TODO Explore turning the comfort levels into binary classification 
+
+        # Grabs season number from the file name
         player_season = season.split(" ")[0]
+
         d = d.assign(count=lambda x: money[player_season].loc['count'], mean=lambda x: money[player_season].loc['mean'], std=lambda x: money[player_season].loc['std'], min=lambda x: money[player_season].loc['min'], max=lambda x: money[player_season].loc['max'], sum=lambda x: money[player_season].loc['sum'])
+
+
         for players in range(len(d.player_id.to_list())):
             p_id = d.iloc[players, 1]
             players_dict.update({f"{p_id}_{player_season}": d.iloc[players]})
-        # print(len(players_dict))
     
     final_df = pd.DataFrame(data=players_dict)
     # Prints the Transposed version of the DataFrame
@@ -85,20 +109,18 @@ def df_gen(draft, money):
 
     # TODO Should create a directory called /data/staging/ where the prepped data is stored.
 
-    final_df.to_csv('output/training_data_prepped.csv')
-
-    # final_df.to_csv('output/spreadsheet_info.csv', index=False)
-       
-    # print(d)
-    # print(d.iloc[0])
+    if data_type == 'prediction':
+        path = os.path.relpath('output/prediction_data_prepped.csv')
+        final_df.to_csv(path)
+    elif data_type == 'training':
+        path = os.path.relpath('output/training_data_prepped.csv')
+        final_df.to_csv(path)
 
 
 if __name__ == "__main__":
+    data_type = 'training'
     draft, captains = list_format("data")
-    # print(draft)
-    # print()
-    # print(captains)
-    league_money(captains) 
-    # print(league_money(captains))
-    df_gen(draft, league_money(captains))
-    print("Training Data was successfully prepared")
+    league_money(captains, data_type) 
+    df_gen(draft, league_money(captains, data_type), data_type)
+    # print("Training Data was successfully prepared")
+    print(f"{data_type.capitalize()} Data was successfully prepared")
