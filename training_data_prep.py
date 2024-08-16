@@ -109,9 +109,12 @@ def df_gen(draft, money, data_type):
 
     # TODO Should create a directory called /data/staging/ where the prepped data is stored.
 
+    os.makedirs("data", exist_ok=True)
+    
     if data_type == 'prediction':
         path = os.path.relpath('output/prediction_data_prepped.csv')
         final_df.to_csv(path)
+
     elif data_type == 'training':
         path = os.path.relpath('output/training_data_prepped.csv')
         final_df.to_csv(path)
@@ -122,5 +125,4 @@ if __name__ == "__main__":
     draft, captains = list_format("data")
     league_money(captains, data_type) 
     df_gen(draft, league_money(captains, data_type), data_type)
-    # print("Training Data was successfully prepared")
     print(f"{data_type.capitalize()} Data was successfully prepared")

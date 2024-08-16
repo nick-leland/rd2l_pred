@@ -70,7 +70,7 @@ if __name__ == "__main__":
     output = {}
 
     # TODO Work on this section and get it ready for integration and managing of both file types
-    # Also if the path doesn't exist, make the path
+    os.makedirs("output", exist_ok=True)
     path = os.path.relpath("output")
     files = os.listdir(path)
 
