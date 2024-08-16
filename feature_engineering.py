@@ -63,31 +63,77 @@ def hero_information(player):
 
 
 if __name__ == "__main__":
+    # Defines our output that we will save to a file
     output = {}
 
-
     # TODO Work on this section and get it ready for integration and managing of both file types
-    # path = os.path.relpath("output")
-    # files = os.listdir(path)
-    # for csv in files:
-        
+    # Also if the path doesn't exist, make the path
+    path = os.path.relpath("output")
+    files = os.listdir(path)
 
-    df = pd.read_csv("output/spreadsheet_info.csv", index_col=0).transpose()
-    players = df.loc[:, 'player_id'].to_list()
-    # Temporarily put only two players for testing purposes
-    for _ in range(len(players[:2])):
-        try: 
-            output.update({df.iloc[_].name: pd.concat([df.iloc[_], hero_information(str(int(players[_])))])})
-            player_id = df.iloc[_].name
-            print(f"Completed {player_id}")
-            time.sleep(2)
+    print(f"Generate [t]raining data if you want to train on a custom dataset.")
+    print(f"Generate [p]rediction data if you want to make predictions on a new season.")
+    print(f"Generate [b]oth if you want to generate fresh data using both train and test inputs.\n")
+    choice = input("Do you want to generate [t]raining data [p]rediction data or [b]oth?\n")
+
+    # Remove the files based on the given situation.
+    if choice == 'p' or choice == 'prediction':
+        files.remove("training_data_prepped.csv")
+
+    if choice == 't' or choice == 'training' or choice == 'train':
+        files.remove("prediction_data_prepped.csv")
+
+    # If user wants both, we should maybe try threading?
+    # Otherwise, threading would be good for running multiple API's together
+
+    # Loop through the rest of the files in the folder structure.
+    for csv in files:
+
+        # Split the name to filter through the result files
+        name = csv.split("_")[0].title()
+        # This can be added upon, currently only skipping over the results of this function
+        if name == "Result":
+            pass 
+        else:
+            # Define the path of the file 
+            location = path + "/" + csv
+            print(f"Working on {name} data.")
+
+            # Read the csv file at the above location
+            df = pd.read_csv(location, index_col=0).transpose()
+
+            # Create a list for the players within the csv file
+            # Temporarily put only two players for testing purposes
+            players = df.loc[:, 'player_id'].to_list()[:2]
+
+            # Prompt the user before parsing for data.
+            print(f"There are {len(players)} players to parse in {name}.  Do you want to continue? ")
+            choice = input("[y]es or [n]o?\n")
+
+            if choice == 'n' or choice == 'no':
+                sys.exit()
+
+            for _ in range(len(players)):
+                try: 
+                    # Adds the hero information for the players
+                    output.update({df.iloc[_].name: pd.concat([df.iloc[_], hero_information(str(int(players[_])))])})
+
+                    # Determines the users player_id for debugging
+                    player_id = df.iloc[_].name
+                    print(f"Completed {player_id}")
+
+                    # Sets a delay due to API limitations
+                    time.sleep(2)
+
+                except ValueError:
+                    # Look more into this, not sure why we would get a ValueError
+                    print("ValueError on {players[_]}")
+                    pass
+                except TypeError:
+                    print("{players[_]} has a private account")
+                    pass
             all_info = pd.DataFrame.from_dict(output)
-            all_info.to_csv('output/all_info.csv')
-        except ValueError:
-            # Look more into this, not sure why we would get a ValueError
-            print("ValueError on {players[_]}")
-            pass
-        except TypeError:
-            print("{players[_]} has a private account")
-            pass
+            all_info.to_csv(f'output/result_{csv}')
+            print(f"Saved to 'output/result_{csv}'")
+
 
