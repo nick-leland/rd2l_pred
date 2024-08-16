@@ -4,6 +4,7 @@ import time
 import sys
 import os
 from os import path
+import io
 
 
 def heroes(player_id):
@@ -23,7 +24,9 @@ def hero_information(player):
         print("There is an issue reaching the Open Dota API")
         time.sleep(10)
         x = heroes(player)
-    d = pd.read_json(x)
+    # Convert to StringIO before passing into pandas, can't take json directly
+    y = io.StringIO(x)
+    d = pd.read_json(y)
 
     # Currently drop this information but it might be useful for matchup analysis
     d = d.drop(["last_played", "with_games", "with_win", "against_games", "against_win"], axis=1)
