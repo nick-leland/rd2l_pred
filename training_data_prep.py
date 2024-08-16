@@ -109,7 +109,7 @@ def df_gen(draft, money, data_type):
 
     # TODO Should create a directory called /data/staging/ where the prepped data is stored.
 
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
     
     if data_type == 'prediction':
         path = os.path.relpath('output/prediction_data_prepped.csv')

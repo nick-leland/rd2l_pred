@@ -106,8 +106,7 @@ if __name__ == "__main__":
             df = pd.read_csv(location, index_col=0).transpose()
 
             # Create a list for the players within the csv file
-            # Temporarily put only two players for testing purposes
-            players = df.loc[:, 'player_id'].to_list()[:2]
+            players = df.loc[:, 'player_id'].to_list()
 
             # Prompt the user before parsing for data.
             print(f"There are {len(players)} players to parse in {name}.  Do you want to continue? ")
@@ -133,7 +132,7 @@ if __name__ == "__main__":
                     print("ValueError on {players[_]}")
                     pass
                 except TypeError:
-                    print("{players[_]} has a private account")
+                    print(f"{players[_]} has a private account")
                     pass
             all_info = pd.DataFrame.from_dict(output)
             all_info.to_csv(f'output/result_{csv}')
