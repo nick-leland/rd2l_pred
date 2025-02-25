@@ -6,10 +6,14 @@ Player Stats - A tool to view combined stats from OpenDota and Stratz for a Dota
 import pandas as pd
 import re
 import os
+import sys
 import time
 import json
 import requests
 from dotenv import load_dotenv
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import feature engineering functions
 from feature_engineering import hero_information, get_stratz_features, combine_features
