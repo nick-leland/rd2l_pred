@@ -5,6 +5,17 @@ import sys
 import os
 from os import path
 import io
+import importlib.util
+
+# Import stratz module if available
+try:
+    import stratz
+    STRATZ_AVAILABLE = True
+except ImportError:
+    STRATZ_AVAILABLE = False
+
+# RD2L league IDs for different seasons
+RD2L_LEAGUE_IDS = [16436, 16435, 16434, 15578, 15577, 15246, 14906, 14507, 14137, 13780, 13375, 13185, 12762, 11984]
 
 
 def heroes(player_id):
@@ -65,6 +76,68 @@ def hero_information(player):
 # TODO Impliment an offline testing version of this which saves the dataframes as pickle documents, read here: https://stackoverflow.com/questions/17098654/how-to-reversibly-store-and-load-a-pandas-dataframe-to-from-disk 
 
 
+def get_stratz_features(player_id, leagues=None):
+    """
+    Gets additional features from Stratz API for a player.
+    
+    Args:
+        player_id (str): The player's Steam ID
+        leagues (list, optional): List of league IDs to check for player participation
+        
+    Returns:
+        pd.Series: Series of features from Stratz
+    """
+    if not STRATZ_AVAILABLE:
+        print("Stratz module not available. Skipping Stratz features.")
+        return pd.Series()
+    
+    try:
+        # Convert player_id to int to match Stratz API expectations
+        player_id = int(player_id)
+        
+        # Query Stratz API
+        response = stratz.stratz_request([player_id], leagues)
+        
+        # Process the response
+        df = stratz.process_player_data(response)
+        
+        if df.empty:
+            print(f"No Stratz data for player {player_id}")
+            return pd.Series()
+        
+        # Convert to Series
+        player_data = df.iloc[0]
+        
+        # Create a series with prefix 'stratz_' for all features
+        stratz_features = {}
+        for key, value in player_data.items():
+            if key not in ['player_id', 'player_name']:  # Skip identifiers
+                stratz_features[f'stratz_{key}'] = value
+        
+        return pd.Series(stratz_features)
+        
+    except Exception as e:
+        print(f"Error getting Stratz data for player {player_id}: {e}")
+        return pd.Series()
+
+
+def combine_features(hero_series, stratz_series=None):
+    """
+    Combines features from OpenDota hero data and Stratz API.
+    
+    Args:
+        hero_series (pd.Series): Series of hero features
+        stratz_series (pd.Series, optional): Series of Stratz features
+        
+    Returns:
+        pd.Series: Combined features
+    """
+    if stratz_series is None or stratz_series.empty:
+        return hero_series
+    
+    return pd.concat([hero_series, stratz_series])
+
+
 if __name__ == "__main__":
     # Defines our output that we will save to a file
     output = {}
@@ -117,19 +190,33 @@ if __name__ == "__main__":
 
             for _ in range(len(players)):
                 try: 
-                    # Adds the hero information for the players
-                    output.update({df.iloc[_].name: pd.concat([df.iloc[_], hero_information(str(int(players[_])))])})
+                    player_id = str(int(players[_]))
+                    player_name = df.iloc[_].name
+                    
+                    # Get hero information from OpenDota
+                    hero_features = hero_information(player_id)
+                    
+                    # Get Stratz features if available
+                    if STRATZ_AVAILABLE:
+                        # Use all RD2L league IDs to check player history
+                        stratz_features = get_stratz_features(player_id, RD2L_LEAGUE_IDS)
+                        
+                        # Combine all features
+                        all_features = combine_features(hero_features, stratz_features)
+                    else:
+                        all_features = hero_features
+                    
+                    # Update output with all player features
+                    output.update({player_name: pd.concat([df.iloc[_], all_features])})
 
-                    # Determines the users player_id for debugging
-                    player_id = df.iloc[_].name
-                    print(f"Completed {player_id}")
+                    print(f"Completed {player_name}")
 
                     # Sets a delay due to API limitations
                     time.sleep(2)
 
                 except ValueError:
                     # Look more into this, not sure why we would get a ValueError
-                    print("ValueError on {players[_]}")
+                    print(f"ValueError on {players[_]}")
                     pass
                 except TypeError:
                     print(f"{players[_]} has a private account")
