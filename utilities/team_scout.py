@@ -18,16 +18,39 @@ from dotenv import load_dotenv
 from tabulate import tabulate  # For formatted console output
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir)
+sys.path.insert(0, root_dir)
 
 # Import features from other modules
 try:
-    import stratz
     from utilities.player_stats import load_hero_mapping, get_hero_name
-    STRATZ_AVAILABLE = True
-except ImportError:
+    
+    # Try to import stratz and show detailed errors if it fails
+    try:
+        import stratz
+        # Verify Stratz API key is available
+        from dotenv import dotenv_values
+        env_vars = dotenv_values(os.path.join(root_dir, '.env'))
+        if 'STRATZ_API_KEY' not in env_vars or not env_vars['STRATZ_API_KEY']:
+            print("Warning: STRATZ_API_KEY not found in .env file")
+            print(f"Checking .env file at: {os.path.join(root_dir, '.env')}")
+            if os.path.exists(os.path.join(root_dir, '.env')):
+                print("The .env file exists but may not contain a valid API key")
+            else:
+                print("The .env file does not exist. Create it with your Stratz API key")
+            STRATZ_AVAILABLE = False
+        else:
+            STRATZ_AVAILABLE = True
+            print(f"Found Stratz API key (first 10 chars): {env_vars['STRATZ_API_KEY'][:10]}...")
+    except ImportError as e:
+        print(f"Error importing stratz module: {e}")
+        print(f"Make sure stratz.py exists in: {root_dir}")
+        STRATZ_AVAILABLE = False
+except ImportError as e:
+    print(f"Error importing modules: {e}")
     STRATZ_AVAILABLE = False
-    print("Warning: Stratz module not available. Some features will be limited.")
+    print("Warning: Some features will be limited due to missing modules.")
 
 # Current RD2L league ID (Season 33)
 CURRENT_LEAGUE_ID = 16436

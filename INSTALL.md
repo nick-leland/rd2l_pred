@@ -82,11 +82,11 @@ The Player Stats tool provides detailed analysis of individual Dota 2 players, i
 
 **Run the tool:**
 ```bash
-./player
+./player.py
 ```
 or
 ```bash
-python utilities/player_stats.py
+python player.py
 ```
 
 **Features:**
@@ -107,11 +107,11 @@ The Team Scouting tool generates comprehensive reports on RD2L teams, helping yo
 
 **Run the tool:**
 ```bash
-./scout
+./scout.py
 ```
 or
 ```bash
-python utilities/team_scout.py
+python scout.py
 ```
 
 **Features:**

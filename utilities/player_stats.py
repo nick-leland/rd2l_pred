@@ -13,16 +13,43 @@ import requests
 from dotenv import load_dotenv
 
 # Add parent directory to path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir)
+sys.path.insert(0, root_dir)
 
-# Import feature engineering functions
-from feature_engineering import hero_information, get_stratz_features, combine_features
+# Import feature engineering functions 
+try:
+    from feature_engineering import hero_information, get_stratz_features, combine_features
+except ImportError as e:
+    print(f"Error importing feature_engineering: {e}")
+    print(f"Python path: {sys.path}")
+    print(f"Looking for feature_engineering.py in: {root_dir}")
+    print(f"Files in root directory: {os.listdir(root_dir)}")
+    sys.exit(1)
 
-# Check if Stratz module is available
+# Try to import stratz and show detailed errors if it fails
 try:
     import stratz
-    STRATZ_AVAILABLE = True
-except ImportError:
+    # Verify Stratz API key is available
+    from dotenv import dotenv_values
+    env_vars = dotenv_values(os.path.join(root_dir, '.env'))
+    if 'STRATZ_API_KEY' not in env_vars or not env_vars['STRATZ_API_KEY']:
+        print("Warning: STRATZ_API_KEY not found in .env file")
+        print(f"Checking .env file at: {os.path.join(root_dir, '.env')}")
+        if os.path.exists(os.path.join(root_dir, '.env')):
+            print("The .env file exists but may not contain a valid API key")
+            with open(os.path.join(root_dir, '.env'), 'r') as f:
+                env_content = f.read()
+                print(f"First line of .env: {env_content.split()[0] if env_content else 'Empty file'}")
+        else:
+            print("The .env file does not exist. Create it with your Stratz API key")
+        STRATZ_AVAILABLE = False
+    else:
+        STRATZ_AVAILABLE = True
+        print(f"Found Stratz API key (first 10 chars): {env_vars['STRATZ_API_KEY'][:10]}...")
+except ImportError as e:
+    print(f"Error importing stratz module: {e}")
+    print(f"Make sure stratz.py exists in: {root_dir}")
     STRATZ_AVAILABLE = False
 
 # Global variables
@@ -37,8 +64,24 @@ def load_hero_mapping():
     """
     global HERO_MAPPING
     
-    # Path for cached mapping
-    cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hero_mapping.json')
+    # Path for cached mapping - check both utility dir and root dir
+    cache_paths = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'hero_mapping.json'),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'hero_mapping.json')
+    ]
+    
+    # Try each path
+    cache_path = None
+    for path in cache_paths:
+        if os.path.exists(path):
+            cache_path = path
+            break
+    
+    # If no existing cache found, use the first path for new cache
+    if not cache_path:
+        cache_path = cache_paths[0]
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
     
     # Try to load from cache first
     if os.path.exists(cache_path):
