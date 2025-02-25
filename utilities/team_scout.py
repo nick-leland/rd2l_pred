@@ -237,27 +237,74 @@ class TeamScout:
         
         # TODO: Implement team match lookup - for now return demo data
         
-        # Mock match data
+        # Mock match data with hero names instead of IDs
+        # Format the matches with more descriptive information
         matches = [
             {
                 "id": "1234567890",
                 "startDateTime": int(time.time()) - (7 * 24 * 60 * 60),  # 7 days ago
+                "date": datetime.datetime.fromtimestamp(int(time.time()) - (7 * 24 * 60 * 60)).strftime('%Y-%m-%d'),
                 "didRadiantWin": True,
                 "isRadiant": True,
+                "duration": "35:42",  # Match duration
+                "score": "32-24",     # Kill score
                 "players": [162015739, 80266369, 27676663, 110119494, 97079776],
-                "picks": [14, 10, 1, 5, 2],  # Hero IDs
-                "bans": [8, 9, 11, 22, 44],   # Hero IDs
-                "draft_order": [(0, 14), (0, 10), (1, 21), (1, 32), (0, 1), (0, 5), (1, 45), (1, 67), (0, 2)]
+                # Hero names instead of IDs
+                "picks": ["Pudge", "Shadow Fiend", "Anti-Mage", "Crystal Maiden", "Axe"],
+                "bans": ["Juggernaut", "Mirana", "Shadow Fiend", "Luna", "Slark"],
+                # Draft order with hero names: (team 0/1, hero name)
+                "draft_order": [
+                    (0, "Pudge"),          # First pick
+                    (0, "Shadow Fiend"),   # Second pick
+                    (1, "Vengeful Spirit"), # Third pick
+                    (1, "Riki"),           # Fourth pick
+                    (0, "Anti-Mage"),      # Fifth pick
+                    (0, "Crystal Maiden"), # Sixth pick
+                    (1, "Phantom Assassin"), # Seventh pick
+                    (1, "Rubick"),         # Eighth pick
+                    (0, "Axe")             # Ninth pick
+                ],
+                # Add role assignments for better analysis
+                "roles": {
+                    "Pudge": "Mid",
+                    "Shadow Fiend": "Carry",
+                    "Anti-Mage": "Offlane",
+                    "Crystal Maiden": "Support",
+                    "Axe": "Hard Support"
+                }
             },
             {
                 "id": "9876543210",
                 "startDateTime": int(time.time()) - (14 * 24 * 60 * 60),  # 14 days ago
+                "date": datetime.datetime.fromtimestamp(int(time.time()) - (14 * 24 * 60 * 60)).strftime('%Y-%m-%d'),
                 "didRadiantWin": False,
                 "isRadiant": False, 
+                "duration": "42:15",  # Match duration
+                "score": "18-35",     # Kill score
                 "players": [162015739, 80266369, 27676663, 110119494, 97079776],
-                "picks": [2, 5, 53, 64, 41],  # Hero IDs
-                "bans": [8, 9, 1, 10, 43],    # Hero IDs
-                "draft_order": [(1, 2), (1, 5), (0, 19), (0, 23), (1, 53), (1, 64), (0, 37), (0, 55), (1, 41)]
+                # Hero names instead of IDs
+                "picks": ["Axe", "Crystal Maiden", "Queen of Pain", "Viper", "Phoenix"],
+                "bans": ["Juggernaut", "Mirana", "Anti-Mage", "Shadow Fiend", "Faceless Void"],
+                # Draft order with hero names
+                "draft_order": [
+                    (1, "Axe"),             # First pick
+                    (1, "Crystal Maiden"),  # Second pick
+                    (0, "Lina"),            # Third pick
+                    (0, "Tiny"),            # Fourth pick
+                    (1, "Queen of Pain"),   # Fifth pick
+                    (1, "Viper"),           # Sixth pick
+                    (0, "Bristleback"),     # Seventh pick
+                    (0, "Snapfire"),        # Eighth pick
+                    (1, "Phoenix")          # Ninth pick
+                ],
+                # Add role assignments for better analysis
+                "roles": {
+                    "Axe": "Offlane",
+                    "Crystal Maiden": "Support",
+                    "Queen of Pain": "Mid",
+                    "Viper": "Carry",
+                    "Phoenix": "Hard Support"
+                }
             }
         ]
         
@@ -446,75 +493,144 @@ class TeamScout:
             pick_counts = {}
             ban_counts = {}
             draft_orders = []
+            role_preferences = {}  # Track which heroes are played in which roles
             
             for match in matches:
-                # Track picks
-                for hero_id in match.get("picks", []):
-                    if hero_id not in pick_counts:
-                        pick_counts[hero_id] = 0
-                    pick_counts[hero_id] += 1
-                
-                # Track bans
-                for hero_id in match.get("bans", []):
-                    if hero_id not in ban_counts:
-                        ban_counts[hero_id] = 0
-                    ban_counts[hero_id] += 1
+                # Track picks using hero names directly
+                for hero in match.get("picks", []):
+                    if hero not in pick_counts:
+                        pick_counts[hero] = {"count": 0, "wins": 0, "matches": []}
                     
-                # Track draft order
+                    pick_counts[hero]["count"] += 1
+                    if match.get("didRadiantWin") == match.get("isRadiant"):
+                        pick_counts[hero]["wins"] += 1
+                        
+                    # Store match info for reference
+                    pick_counts[hero]["matches"].append({
+                        "id": match.get("id"),
+                        "date": match.get("date", "Unknown"),
+                        "result": "Win" if match.get("didRadiantWin") == match.get("isRadiant") else "Loss"
+                    })
+                
+                # Track bans using hero names directly
+                for hero in match.get("bans", []):
+                    if hero not in ban_counts:
+                        ban_counts[hero] = 0
+                    ban_counts[hero] += 1
+                    
+                # Track draft order with hero names
                 if "draft_order" in match:
                     draft_orders.append(match["draft_order"])
+                
+                # Track role preferences if available
+                if "roles" in match:
+                    for hero, role in match["roles"].items():
+                        if hero not in role_preferences:
+                            role_preferences[hero] = {}
+                        
+                        if role not in role_preferences[hero]:
+                            role_preferences[hero][role] = 0
+                        
+                        role_preferences[hero][role] += 1
             
             # Convert pick counts to list and sort
             pick_list = []
-            for hero_id, count in pick_counts.items():
+            for hero, data in pick_counts.items():
+                # Calculate win rate
+                win_rate = data["wins"] / data["count"] if data["count"] > 0 else 0
+                
+                # Get preferred role for this hero if available
+                preferred_role = "Unknown"
+                if hero in role_preferences:
+                    # Find most common role
+                    preferred_role = max(role_preferences[hero].items(), key=lambda x: x[1])[0]
+                
                 pick_list.append({
-                    "hero_id": hero_id,
-                    "hero_name": self.get_hero_name(hero_id),
-                    "count": count
+                    "hero_name": hero,
+                    "count": data["count"],
+                    "wins": data["wins"],
+                    "win_rate": win_rate,
+                    "preferred_role": preferred_role,
+                    "matches": data["matches"]  # Include match history for reference
                 })
+                
             pick_list.sort(key=lambda x: x["count"], reverse=True)
             report["team_picks"] = pick_list
             
             # Convert ban counts to list and sort
             ban_list = []
-            for hero_id, count in ban_counts.items():
+            for hero, count in ban_counts.items():
                 ban_list.append({
-                    "hero_id": hero_id,
-                    "hero_name": self.get_hero_name(hero_id),
+                    "hero_name": hero,
                     "count": count
                 })
+                
             ban_list.sort(key=lambda x: x["count"], reverse=True)
             report["team_bans"] = ban_list
             
-            # Analyze draft patterns
-            # TODO: Implement more sophisticated draft pattern analysis
-            # For now, just count heroes by draft position
+            # Add role preferences to report
+            report["role_preferences"] = {}
+            for hero, roles in role_preferences.items():
+                top_role = max(roles.items(), key=lambda x: x[1])
+                report["role_preferences"][hero] = {
+                    "main_role": top_role[0],
+                    "count": top_role[1],
+                    "all_roles": roles
+                }
+            
+            # Analyze draft patterns - hero names are already in the data
             draft_positions = {}
             for order in draft_orders:
-                for pos, hero_id in order:
-                    if pos not in draft_positions:
-                        draft_positions[pos] = {}
+                for phase_idx, (team, hero_name) in enumerate(order):
+                    # Track hero by draft phase (1-9) rather than by team's pick order
+                    phase = phase_idx + 1  # 1-indexed for readability
                     
-                    if hero_id not in draft_positions[pos]:
-                        draft_positions[pos][hero_id] = 0
+                    # Create phase categories:
+                    # First phase: 1-4
+                    # Second phase: 5-8
+                    # Third phase: 9+
+                    if phase <= 4:
+                        phase_category = "First Phase"
+                    elif phase <= 8:
+                        phase_category = "Second Phase"
+                    else:
+                        phase_category = "Third Phase"
                     
-                    draft_positions[pos][hero_id] += 1
+                    # Store by phase category
+                    if phase_category not in draft_positions:
+                        draft_positions[phase_category] = {}
+                    
+                    if hero_name not in draft_positions[phase_category]:
+                        draft_positions[phase_category][hero_name] = {
+                            "count": 0,
+                            "team_sides": {"0": 0, "1": 0}  # Track which team picks it
+                        }
+                    
+                    draft_positions[phase_category][hero_name]["count"] += 1
+                    draft_positions[phase_category][hero_name]["team_sides"][str(team)] += 1
             
-            # Convert draft positions to list
+            # Convert draft positions to a more usable format
             draft_patterns = []
-            for pos, heroes in draft_positions.items():
+            
+            for phase_category, heroes in draft_positions.items():
                 hero_list = []
-                for hero_id, count in heroes.items():
+                for hero_name, data in heroes.items():
+                    preferred_side = "First Pick" if data["team_sides"]["0"] > data["team_sides"]["1"] else "Second Pick"
+                    if data["team_sides"]["0"] == data["team_sides"]["1"]:
+                        preferred_side = "Both Sides"
+                        
                     hero_list.append({
-                        "hero_id": hero_id,
-                        "hero_name": self.get_hero_name(hero_id),
-                        "count": count
+                        "hero_name": hero_name,
+                        "count": data["count"],
+                        "preferred_side": preferred_side,
+                        "side_distribution": data["team_sides"]
                     })
+                
                 hero_list.sort(key=lambda x: x["count"], reverse=True)
                 
                 draft_patterns.append({
-                    "position": pos,
-                    "heroes": hero_list[:3]  # Top 3 heroes for this position
+                    "phase": phase_category,
+                    "heroes": hero_list[:5]  # Top 5 heroes for this phase
                 })
             
             report["team_draft_patterns"] = draft_patterns
@@ -606,46 +722,115 @@ class TeamScout:
                 ])
             print(tabulate(bans_table, tablefmt="plain"))
         
-        # Print draft patterns
+        # Print draft patterns with more information
         if "team_draft_patterns" in report and report["team_draft_patterns"]:
             print("\nDRAFT PATTERNS")
             print("-" * 80)
-            for pattern in sorted(report["team_draft_patterns"], key=lambda x: x["position"]):
-                pos = pattern["position"]
-                phase = "First phase" if pos <= 1 else "Second phase" if pos <= 3 else "Third phase"
-                print(f"\n  Position {pos} ({phase}):")
+            for pattern in report["team_draft_patterns"]:
+                phase = pattern["phase"]
+                print(f"\n  {phase} Draft:")
                 for hero in pattern["heroes"]:
-                    print(f"    {hero['hero_name']} - {hero['count']} times")
+                    # Add preferred side and win rate if available
+                    side_info = f" - {hero['preferred_side']}" if 'preferred_side' in hero else ""
+                    print(f"    {hero['hero_name']} - {hero['count']} times{side_info}")
+        
+        # Print role preferences if available
+        if "role_preferences" in report and report["role_preferences"]:
+            print("\nROLE PREFERENCES")
+            print("-" * 80)
+            
+            # Group by role first
+            roles = {
+                "Carry": [],
+                "Mid": [],
+                "Offlane": [],
+                "Support": [],
+                "Hard Support": []
+            }
+            
+            for hero, data in report["role_preferences"].items():
+                roles[data["main_role"]].append((hero, data["count"]))
+            
+            # Print by role
+            for role, heroes in roles.items():
+                if heroes:
+                    print(f"\n  {role} Heroes:")
+                    for hero, count in sorted(heroes, key=lambda x: x[1], reverse=True):
+                        print(f"    {hero} - {count} games")
+                    
+            print(f"\nNote: Role assignments are based on {len(report['role_preferences'])} observed picks")
         
         print("\n" + "=" * 80)
         print("RECOMMENDED BAN PRIORITIES")
         print("-" * 80)
         
-        # Calculate ban priorities based on pick frequency and impact
+        # Calculate ban priorities based on pick frequency, winrate, and impact
         ban_priorities = []
         
-        # TODO: Implement more sophisticated ban priority algorithm
-        # For now, just suggest the most picked heroes
+        # Enhanced ban priority algorithm:
         if "team_picks" in report and report["team_picks"]:
-            for hero in report["team_picks"][:3]:  # Top 3 team picks
-                ban_priorities.append(hero)
+            # Consider both pick frequency and win rate
+            for hero in report["team_picks"]:
+                # Calculate a ban score based on frequency and success
+                win_rate = hero.get("win_rate", 0.5)
+                count = hero.get("count", 0)
+                
+                # Higher score for frequently picked heroes with high win rates
+                ban_score = count * (win_rate + 0.5)  # Add 0.5 so even 0% winrate heroes get some score
+                
+                # Add role context if available
+                role = hero.get("preferred_role", "Unknown")
+                ban_text = f"Picked {count} times with {win_rate:.1%} win rate"
+                if role != "Unknown":
+                    ban_text += f" as {role}"
+                
+                ban_priorities.append({
+                    "hero_name": hero["hero_name"],
+                    "ban_score": ban_score,
+                    "reason": ban_text,
+                    "details": hero  # Store the full hero data for additional context
+                })
         
         # Add top heroes from players if not already in list
         for player in report["players"]:
             if "league_heroes" in player and player["league_heroes"]:
                 for hero in player["league_heroes"][:2]:  # Top 2 heroes per player
-                    # Check if already in ban priorities
-                    if not any(p["hero_id"] == hero["hero_id"] for p in ban_priorities):
+                    # Check if already in ban priorities by name
+                    hero_name = hero.get("hero_name", "")
+                    if not any(p["hero_name"] == hero_name for p in ban_priorities) and hero_name:
+                        # Calculate player-specific ban score
+                        games = hero.get("games", 0)
+                        winrate = hero.get("winrate", 0.5)
+                        player_ban_score = games * (winrate + 0.5) * 0.8  # Slightly lower weight than team picks
+                        
                         ban_priorities.append({
-                            "hero_id": hero["hero_id"],
-                            "hero_name": hero["hero_name"],
-                            "reason": f"Top hero for {player['name']}"
+                            "hero_name": hero_name,
+                            "ban_score": player_ban_score,
+                            "reason": f"Preferred by {player['name']} ({games} games, {winrate:.1%} win rate)",
+                            "player": player['name']
                         })
         
-        # Print ban priorities
-        for i, hero in enumerate(ban_priorities[:5], 1):  # Top 5 priorities
-            reason = hero.get("reason", "Frequently picked")
-            print(f"{i}. {hero['hero_name']} - {reason}")
+        # Sort by ban score
+        ban_priorities.sort(key=lambda x: x.get("ban_score", 0), reverse=True)
+        
+        # Print ban priorities with more context
+        if ban_priorities:
+            ban_table = []
+            for i, hero in enumerate(ban_priorities[:5], 1):  # Top 5 priorities
+                reason = hero.get("reason", "Recommended ban")
+                ban_table.append([
+                    f"{i}.", 
+                    hero['hero_name'], 
+                    reason
+                ])
+            print(tabulate(ban_table, tablefmt="grid"))
+            
+            print("\nBan Strategy Recommendations:")
+            print("1. First phase: Ban strongest meta heroes that team excels with")
+            print("2. Second phase: Target specific comfort picks for core players")
+            print("3. Consider banning counters to your own strategy if not listed above")
+        else:
+            print("Not enough data to generate ban priorities.")
         
         print("\n" + "=" * 80)
     
